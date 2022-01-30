@@ -2,21 +2,35 @@
 
 #Creates s3 bucket for data assets
 resource "aws_s3_bucket" "s3-module" {
-  bucket = "${var.s3-bucket-name}"
-  acl    = "private"
+  bucket                                    = "${var.s3-bucket-name}"
+  acl                                       = "private"
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
 }
 
 #Creates s3 bucket for ETL scripts
 resource "aws_s3_bucket" "s3-scripts-module" {
-  bucket = "${var.s3-scriptsbucket-name}"
-  acl    = "private"
+  bucket                                    = "${var.s3-scriptsbucket-name}"
+  acl                                       = "private"
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
 }
 
 ### New role creation
 ### Here assume_role_policy MUST be defined for the trust relationship
 resource "aws_iam_role" "glue_service_role" {
-  name = "GlueWorkflowRole"
-  assume_role_policy = <<EOF
+  name                  = "GlueWorkflowRole"
+  assume_role_policy    = <<EOF
 {
  "Version": "2012-10-17",
  "Statement": [
@@ -47,9 +61,9 @@ resource "aws_iam_role_policy_attachment" "glue_service_role_policy_attach" {
 
 #Creates Glue components DB
 resource "aws_glue_catalog_database" "aws_glue_catalog_database" {
-  name = "yolt-assignment"
-  description = "Yolt assignment database"
-  location_uri = "s3://yolt-assignment-2022"
+  name          = "yolt-assignment"
+  description   = "Yolt assignment database"
+  location_uri  = "s3://yolt-assignment-2022"
 }
 
 #Creates Glue crawler
@@ -63,6 +77,12 @@ resource "aws_glue_crawler" "yolt_assignment_crawler" {
   }
 }
 
+#Enabling CloudWatch Logs and Metrics
+resource "aws_cloudwatch_log_group" "yolt-assignment-cwl" {
+  name              = "yolt-assignment-cwl"
+  retention_in_days = 14
+}
+
 #Creates Glue job
 resource "aws_glue_job" "yolt-assignment-job" {
   name     = "yolt-assignment-job"
@@ -70,6 +90,13 @@ resource "aws_glue_job" "yolt-assignment-job" {
 
   command {
     script_location = "s3://yolt-assignment-scripts-2022/yolt-transform.py"
+  }
+  default_arguments = {
+    # ... potentially other arguments ...
+    "--continuous-log-logGroup"          = "yolt-assignment-cwl"
+    "--enable-continuous-cloudwatch-log" = "true"
+    "--enable-continuous-log-filter"     = "true"
+    "--enable-metrics"                   = ""
   }
 }
 
@@ -80,9 +107,9 @@ resource "aws_glue_workflow" "yolt-assignment-workflow" {
 
 #Creates Glue trigger 1
 resource "aws_glue_trigger" "yolt-assignment-trigger1" {
-  name     = "yolt-assignment-trigger1"
-  schedule = "cron(30 2 * * ? *)"
-  type     = "SCHEDULED"
+  name          = "yolt-assignment-trigger1"
+  schedule      = "cron(30 2 * * ? *)"
+  type          = "SCHEDULED"
   workflow_name = "yolt-assignment-workflow"
 
   actions {
@@ -92,8 +119,8 @@ resource "aws_glue_trigger" "yolt-assignment-trigger1" {
 
 #Creates Glue trigger 2
 resource "aws_glue_trigger" "yolt-assignment-trigger2" {
-  name = "yolt-assignment-trigger2"
-  type = "CONDITIONAL"
+  name          = "yolt-assignment-trigger2"
+  type          = "CONDITIONAL"
   workflow_name = "yolt-assignment-workflow"
 
   predicate {
