@@ -89,14 +89,16 @@ resource "aws_glue_job" "yolt-assignment-job" {
   role_arn = "arn:aws:iam::473255871391:role/GlueWorkflowRole"
 
   command {
-    script_location = "s3://yolt-assignment-scripts-2022/yolt-transform.py"
+    script_location = "s3://yolt-assignment-scripts/yolt-transform.py"
   }
   default_arguments = {
     # ... potentially other arguments ...
     "--continuous-log-logGroup"          = "yolt-assignment-cwl"
     "--enable-continuous-cloudwatch-log" = "true"
     "--enable-continuous-log-filter"     = "true"
-    "--enable-metrics"                   = ""
+    "--enable-metrics"                   = "true"
+    "--job-language"                     = "python3"
+    "--job-bookmark-option"             = "job-bookmark-disable"
   }
 }
 
