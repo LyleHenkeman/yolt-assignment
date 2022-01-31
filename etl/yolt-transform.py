@@ -23,14 +23,20 @@ datasource0 = glueContext.create_dynamic_frame.from_catalog(database = "yolt-ass
 # Starting pipeline:
 print('Message="Start of pipeline"')
 
+#Applies a mapping in a DynamicFrame
 applymapping1 = ApplyMapping.apply(frame = datasource0, mappings = [("name", "string", "name", "string"), ("value", "float", "value", "float"), ("start_date", "date", "start_date", "date"), ("end_date", "date", "end_date", "date"), ("year_week", "string", "year_week", "string"), ("has_subtrackers", "boolean", "has_subtrackers", "boolean"), ("token", "string", "token", "string"), ("dataplatform_inserted_at", "timestamp", "dataplatform_inserted_at", "timestamp"), ("country", "string", "country", "string"), ("os_name", "string", "os_name", "string")], transformation_ctx = "applymapping1")
 
-
+#Resolves a choice type within a DynamicFrame
 resolvechoice2 = ResolveChoice.apply(frame = applymapping1, choice = "make_struct", transformation_ctx = "resolvechoice2")
 
 
 df_yolt_output = resolvechoice2.toDF()
 
+#Drop a column
+df_yolt_output.drop(datasource0("token")) \
+  .printSchema()  
+
+#Write data to S3
 s3_path_output = "s3://yolt-assignment-data/processed/"
 df_yolt_output.repartition(1).write.mode("overwrite").parquet(s3_path_output)
 
