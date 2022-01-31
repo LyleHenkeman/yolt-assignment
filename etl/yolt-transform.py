@@ -29,9 +29,9 @@ applymapping1 = ApplyMapping.apply(frame = datasource0, mappings = [("name", "st
 resolvechoice2 = ResolveChoice.apply(frame = applymapping1, choice = "make_struct", transformation_ctx = "resolvechoice2")
 
 
-df_grid_output = resolvechoice2.toDF()
+df_yolt_output = resolvechoice2.toDF()
 
 s3_path_output = "s3://yolt-assignment-data/processed/"
-df_grid_output.repartition(1).write.mode("overwrite").parquet(s3_path_output)
+df_yolt_output.repartition(1).write.mode("overwrite").parquet(s3_path_output)
 
 job.commit()
