@@ -7,7 +7,7 @@
 
 - Use Airflow for scheduling since Yolt use Airflow, for this single use-case / assignment, it's maybe a bit overkill, so used AWS native Workflows
 
+## Included:
 - Role, policy
 - Glue components (DB, workflow, Triggers (02:30AM), crawler, job)
 - S3 buckets (encryption)
-- 
